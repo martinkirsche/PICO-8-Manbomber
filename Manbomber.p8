@@ -658,6 +658,21 @@ spawns = {{x=3,y=4},{x=13,y=14},{x=3,y=14},{x=13,y=4}}
 idles = split "SideIdle,SideIdle,UpIdle,DownIdle"
 --change pallete based on id
 
+usedController = {}
+function findController(player)
+    for c=0, 7 do
+        if not usedController[c + 1] then
+            for b=0, 5 do
+                if (btn(b, c)) then
+                    usedController[c + 1] = player
+                    return c
+                end
+            end
+        end
+    end
+    return -1 
+end
+
 _playerComponent = {
     id,
     name = "Player",
@@ -677,6 +692,13 @@ _playerComponent = {
 }
 
 function _playerComponent:init()
+    self.controller = -1 
+    for c=0, 7 do
+        if usedController[c + 1] == self.id then
+            self.controller = c
+        end 
+    end 
+
     --Set up Transform
     self.alive = true
     self.transform = self.parent:getComponent("Transform")
@@ -718,7 +740,15 @@ function _playerComponent:update()
 end
 
 function _playerComponent:handleInput()
-    local id = self.id
+
+    if self.controller == -1 then
+        self.controller = findController(self.id)
+    end
+    
+    local id = self.controller
+    if id == -1 then
+        return
+    end
     local accel = self.speed
     if btn(0, id) then
         self.dx -= accel
@@ -1582,6 +1612,8 @@ function _titleScene:start()
     self.title.bomb = bomb.parent
     self.title.bomb:removeComponent("Bomb") --remove bomb logic
     self.fire = createEntity(_fire)
+
+    usedController = {} -- this allows everyone to pick up another game controller in the next game
 end
 
 function _titleScene:unload()
