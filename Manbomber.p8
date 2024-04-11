@@ -603,18 +603,17 @@ _fire = {
 
 function _fire:update()
     self.nextEmber -= dt
-    if(self.nextEmber <= 0) then
+    if self.nextEmber <= 0 then
         self.nextEmber = 0.1 + rnd(0.2)
         add(self.embers, _ember:create())
     end
 
     for ember in all(self.embers) do
-        if(ember.y < 0) then 
+        if ember.y < 0 then 
             del(self.embers, ember)
         else
             ember.y -= ember.speed
-            local y = ember.y + ember.offset
-            local g = ember.trajectory
+            local y, g = ember.y + ember.offset, ember.trajectory
             ember.x = 16 * sin(y * g + cos(y * g + 2)) + ember.xOffset
         end
     end
@@ -656,7 +655,7 @@ end
 --Player Component
 maxSpeed, maxBombs, maxRange = 1.6, 6, 6
 spawns = {{x=3,y=4},{x=13,y=14},{x=3,y=14},{x=13,y=4}}
-idles = {"SideIdle", "SideIdle", "UpIdle", "DownIdle"} 
+idles = split "SideIdle,SideIdle,UpIdle,DownIdle"
 --change pallete based on id
 
 _playerComponent = {
@@ -690,23 +689,16 @@ function _playerComponent:init()
     self.sprite:setSize(1,2)
     self.sprite:setDrawingOffset(4, 12)
     --Set up Animation
-    self.animator = self.parent:getComponent("Animator")
-    local sideWalk = animation.createAnimation({77, 78, 77, 79, 96, 97, 96, 79}, 3)
-    self.animator:addAnimation("SideWalk", sideWalk)
-    local upWalk = animation.createAnimation({70, 71, 70, 72}, 2, true)
-    self.animator:addAnimation("UpWalk", upWalk)
-    local downWalk = animation.createAnimation({64, 64, 65, 66}, 2, true)
-    self.animator:addAnimation("DownWalk", downWalk)
-    local die = animation.createAnimation({64,102,103,104,105,105,105,105,105,105,105}, 4, false, false)
-    self.animator:addAnimation("Die", die)
-    local victory = animation.createAnimation({64,106,107,108,108,107}, 4)
-    self.animator:addAnimation("Victory", victory)
-    local sideIdle = animation.createAnimation({79,98,99,100,100,100,99}, 4)
-    self.animator:addAnimation("SideIdle", sideIdle)
-    local upIdle = animation.createAnimation({73,74,75,76,76,76,75}, 4)
-    self.animator:addAnimation("UpIdle", upIdle)
-    local downIdle = animation.createAnimation({64,64,67,68,69,69,68}, 4)
-    self.animator:addAnimation("DownIdle", downIdle)
+    animator = self.parent:getComponent("Animator")
+    animator:addAnimation("SideWalk", animation.createAnimation({77, 78, 77, 79, 96, 97, 96, 79}, 3))
+    animator:addAnimation("UpWalk", animation.createAnimation({70, 71, 70, 72}, 2, true))
+    animator:addAnimation("DownWalk", animation.createAnimation({64, 64, 65, 66}, 2, true))
+    animator:addAnimation("Die", animation.createAnimation({64,102,103,104,105,105,105,105,105,105,105}, 4, false, false))
+    animator:addAnimation("Victory", animation.createAnimation({64,106,107,108,108,107}, 4))
+    animator:addAnimation("SideIdle", animation.createAnimation({79,98,99,100,100,100,99}, 4))
+    animator:addAnimation("UpIdle", animation.createAnimation({73,74,75,76,76,76,75}, 4))
+    animator:addAnimation("DownIdle", animation.createAnimation({64,64,67,68,69,69,68}, 4))
+    self.animator = animator
 end
 
 function _playerComponent:draw()
@@ -728,16 +720,16 @@ end
 function _playerComponent:handleInput()
     local id = self.id
     local accel = self.speed
-    if (btn(0, id)) then
-         self.dx -= accel
+    if btn(0, id) then
+        self.dx -= accel
     end
-    if (btn(1, id)) then
+    if btn(1, id) then
         self.dx += accel
     end
-    if (btn(2, id)) then 
+    if btn(2, id) then 
         self.dy -= accel
     end
-    if (btn(3, id)) then
+    if btn(3, id) then
         self.dy += accel
     end
     if (btnp(5, id)) self:tryDropBomb()
@@ -762,7 +754,7 @@ function _playerComponent:handleCollision()
     local oldCell = to_map(x,y)
     local s = mget(oldCell.x, oldCell.y)
     --check for explosions or stage hazards
-    if (currentScene:getExplosion(oldCell) ~= nil) or (fget(s,0) and not fget(s,1)) then
+    if currentScene:getExplosion(oldCell) ~= nil or fget(s,0) and not fget(s,1) then
         self:die()
         return
     end
@@ -863,7 +855,6 @@ function _playerComponent:checkForItems()
             while t > 0 do
                 t -= dt
                 local rand = flr(rnd(100)) / 100
-                printh(rand)
                 if (rand < d) self:tryDropBomb()
                 yield()
             end
@@ -984,36 +975,36 @@ function _explosionComponent:explode(transform, range)
     if (fget(mget(cellpos.x, cellpos.y), 1)) setGround(cellpos.x, cellpos.y)
     for i=1,range do
         --left
-        if (lc == true) then
+        if lc == true then
             type = self:explode_at(cellpos.x - i, cellpos.y)
-            if (type > 0) then
+            if type > 0 then
                 type = (i == range) and 1 or type
                 self:addExplosionAt(cellpos.x - i, cellpos.y, type, "horizontal", true) 
             end
             lc = type > 1
         end
         --up
-        if (uc == true) then
+        if uc == true then
             type = self:explode_at(cellpos.x, cellpos.y - i)
-            if (type > 0) then
+            if type > 0 then
                 type = (i == range) and 1 or type
                 self:addExplosionAt(cellpos.x, cellpos.y - i, type, "vertical", false)
             end
             uc = type > 1
         end
         --right
-        if (rc == true) then
+        if rc == true then
             type = self:explode_at(cellpos.x + i, cellpos.y)
-            if (type > 0) then
+            if type > 0 then
                 type = (i == range) and 1 or type
                 self:addExplosionAt(cellpos.x + i, cellpos.y, type, "horizontal", false)
             end
             rc = type > 1
         end
         --down
-        if (dc == true) then
+        if dc == true then
             type = self:explode_at(cellpos.x, cellpos.y + i)
-            if (type > 0) then
+            if type > 0 then
                 type = (i == range) and 1 or type
                 self:addExplosionAt(cellpos.x, cellpos.y + i, type, "vertical", true)
             end
@@ -1027,7 +1018,7 @@ end
 function _explosionComponent:explode_at(cellx, celly)
     local cell = mget(cellx, celly)
     local bomb = currentScene:getBombAtCell({x = cellx, y = celly})
-    if (bomb) then
+    if bomb then
         bomb:explode()
         return 0
     end
@@ -1047,11 +1038,11 @@ end
 function _explosionComponent:addExplosionAt(cellx, celly, type, orientation, flipped)
     local expl, sprites = createExplosion(cellx, celly), {}
     local animator = expl:getComponent("Animator")
-    if (orientation == "horizontal") then
+    if orientation == "horizontal" then
         if(type == 1) sprites = {160, 161, 162, 163}
         if(type == 2) sprites = {144, 145, 146, 147}
         animator.sprite.flipped_x = flipped
-    elseif (orientation == "vertical") then
+    elseif orientation == "vertical" then
         if(type == 1) sprites = {176, 177, 178, 176}
         if(type == 2) sprites = {135, 134, 133, 132}
         animator.sprite.flipped_y = flipped
@@ -1185,7 +1176,7 @@ end
 
 function _animatorComponent:setAnimation(name)
     if (name == self.currentAnim) return
-    if (name ~= '') then
+    if name ~= '' then
         self.sprite:setSprite(self.animations[name]:getNext())
         self.play = true
     else
@@ -1197,7 +1188,7 @@ function _animatorComponent:setAnimation(name)
 end
 
 function _animatorComponent:update()
-    if (self.play) then
+    if self.play then
         self.frameCounter += 1
         if self.frameCounter >= self.animations[self.currentAnim].animDelay then
             self.sprite:setSprite(self.animations[self.currentAnim]:getNext())
@@ -1226,7 +1217,7 @@ end
 
 function animation:getNext()
     self.index += 1
-    if (self.index > #self.frames) then 
+    if self.index > #self.frames then 
         if (self.mirrored) self.parent.sprite.flipped_x = not self.parent.sprite.flipped_x
         if self.loop then
             self:reset() 
@@ -1261,7 +1252,7 @@ end
 
 function _mapComponent:draw() 
     map(0,0,-3,0) 
-    if (self.dark) then
+    if self.dark then
         darkMapPal()
         map(0,0,-3,0,16,16,0x80)
     end
@@ -1271,20 +1262,17 @@ function _mapComponent:generateMap()
     local freeCells = {}
     for x = 3, 13 do
         for y = 4, 14 do
-            local cell = {x = x, y = y}
             if not fget(mget(x,y), 0) then
                 if mget(x,y) != 53 then
-                    add(freeCells, cell)
+                    add(freeCells, {x = x, y = y})
                 else
                     setGround(x,y)
                 end
             end
         end
     end
-    local blockAmount = 60 + flr(rnd(5))
-    for i = 1, blockAmount do
-        local index = 1 + flr(rnd(#freeCells - 1))
-        local cellPos = deli(freeCells, index)
+    for i = 1, 60 + flr(rnd(5)) do
+        local cellPos = deli(freeCells, 1 + flr(rnd(#freeCells - 1)))
         mset(cellPos.x, cellPos.y, blockSprite)
     end
 end
@@ -1422,17 +1410,11 @@ end
 -->8
 --Screen Conversion
 function to_screen(x,y)
-    local screenPos={}
-    screenPos.x = x*tilesize
-    screenPos.y = y*tilesize
-    return screenPos
+    return {x = x*tilesize, y = y*tilesize}
 end
 
 function to_map(x,y)
-    local mapPos={}
-    mapPos.x = x \ tilesize
-    mapPos.y = y \ tilesize
-    return mapPos
+    return {x = x \ tilesize, y = y \ tilesize}
 end
 
 function mapIndex(cellPos)
@@ -1448,8 +1430,7 @@ function compareCells(cell1, cell2)
 end
 
 function setGround(x, y)
-    local s = flr(rnd(#groundTiles - 1)) + 1
-    mset(x, y, groundTiles[s])
+    mset(x, y, groundTiles[flr(rnd(#groundTiles - 1)) + 1])
     mset(x + mapsize, y + mapsize, 0) -- set ground for collision map
 end
 -->8
@@ -1654,7 +1635,7 @@ end
 
 function _titleTextEnt:draw()
     sspr(56,16,64,8,2,self.yPos,128,16)
-    if (self.yPos == 50) then
+    if self.yPos == 50 then
         self.bomb:draw()
         self.startText:draw()
     end
@@ -1916,9 +1897,7 @@ function _mainScene:onPlayerDied(entityName)
 end
 
 function _mainScene:endRound()
-    local victoryEnt = createEntity(_VictoryUI)
-    local mode
-    local remaining = #self.livingPlayers
+    local victoryEnt, remaining, mode = createEntity(_VictoryUI), #self.livingPlayers
     if remaining == 0 then
         mode = "tie"
         music(25)
@@ -2107,8 +2086,7 @@ function _victoryScene:onLoad()
     ent:init()
     ent:getComponent("Player").active = false
     ent:removeComponent("Player")
-    local anim = ent:getComponent("Animator")
-    local landing = animation.createAnimation({69,106,106,69,69,69,69}, 5)
+    local anim, landing = ent:getComponent("Animator"), animation.createAnimation({69,106,106,69,69,69,69}, 5)
     anim:addAnimation("Landing", landing)
     self.trans = ent:getComponent("Transform")
     self.trans:setPosition(63, 0)
@@ -2127,8 +2105,7 @@ function _victoryScene:onLoad()
 end
 
 function _victoryScene:update()
-    local y = self.trans.y
-    local state = self.state
+    local y, state = self.trans.y, self.state
     if state == "fall" then
         if (y <= 20) y+=3
         if (y > 20 and y < 80) y+=7
