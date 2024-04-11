@@ -1359,7 +1359,7 @@ function _VictoryUI:update()
         if (self.w > 56) self.h +=2
         if (self.h >= 18) self.fullrect = true
     else
-        if btnp(❎) then
+        if btnpOnAny(❎) then
             self:onBtnPress()
         end
     end
@@ -1589,7 +1589,7 @@ function _titleScene:unload()
 end
 
 function _titleScene:update()
-    if (btnp(❎)) then
+    if btnpOnAny(❎) then
         self.title.anim = true
         sfx(3, 3)
     end
@@ -1655,15 +1655,15 @@ function _selectionScene:start()
 end
 
 function _selectionScene:update()
-    if btnp(⬆️) and self.cursorPos > 0 then 
+    if btnpOnAny(⬆️) and self.cursorPos > 0 then 
 		sfx(04)
 		self.cursorPos -= 1
 	end
-	if btnp(⬇️) and self.cursorPos < 2 then 
+	if btnpOnAny(⬇️) and self.cursorPos < 2 then 
 		sfx(04)
 		self.cursorPos += 1
     end
-    if btnp(❎) then 
+    if btnpOnAny(❎) then 
         sfx(03)
         mainScene.playerCount = self.cursorPos + 2
         playerUI:reset()
@@ -1724,13 +1724,13 @@ _stageSelectionScene = {
 function _stageSelectionScene:update()
     self.rightArrowX, self.leftArrowX = 94, 25
     local i = self.i
-     if btnp(0) then
+     if btnpOnAny(0) then
         i = i == 1 and 3 or i - 1
         self.leftArrowX -= 1
-     elseif btnp(1) then
+     elseif btnpOnAny(1) then
         i = i == 3 and 1 or i + 1
         self.rightArrowX += 1
-     elseif btnp(❎) then
+     elseif btnpOnAny(❎) then
         if i == 1 then
             mapEnt.x, mapEnt.y, mapEnt.dark = 0,0,false
             groundTiles = {4,5,6,8,9}
@@ -1791,26 +1791,26 @@ function _winSelectionScene:update()
     self.scrollOffset = sO
 
     if not self.selected then
-        if btnp(⬆️) and self.winNumber < 9 then
+        if btnpOnAny(⬆️) and self.winNumber < 9 then
             sfx(4)
             self.upArrowY += 1
             self.winNumber += 1
         end
-        if btnp(⬇️) and self.winNumber > 1 then
+        if btnpOnAny(⬇️) and self.winNumber > 1 then
             sfx(4)
             self.downArrowY -=1
             self.winNumber -= 1
         end
-        if btnp(❎) then
+        if btnpOnAny(❎) then
             sfx(3)
             self.selected = true
         end
     else 
-        if (btnp(🅾️)) then
+        if btnpOnAny(🅾️) then
             self.selected = false
         end
 
-        if btnp(❎) then
+        if btnpOnAny(❎) then
             sfx(1)
             mainScene.neededWins, roundIndicationScene.round = self.winNumber, 1
             currentScene = changeScene(self, roundIndicationScene)
@@ -2233,6 +2233,13 @@ function darkMapPal()
     pal(4,5)
     pal(7,8)    
     pal(5,13)
+end
+
+function btnpOnAny(button)
+    for c=0,7 do
+        if (btnp(button, c)) return true
+    end
+    return false
 end
 
 __gfx__
